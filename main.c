@@ -6,14 +6,6 @@
 
 #include "sorting.h"
 
-typedef struct boid {
-  float pos_x;
-  float pos_y;
-  float vel_x;
-  float vel_y;
-  int type;
-} boid_t;
-
 void print_boid_pos(boid_t* b) {
   printf("(%.2f, %.2f)", b->pos_x, b->pos_y);
 }
@@ -40,33 +32,28 @@ int main(int argc, char* argv[]) {
   int range_x = 250;
   int range_y = 200;
 
-  // Allocate grid
-  boid_t** grid = (boid_t**) malloc(p * sizeof(boid_t*));
-  for (size_t i = 0; i < p; i++) {
-    grid[i] = (boid_t*) malloc(p * sizeof(boid_t));
-  }
+  // Allocate grid as 1D array (easier for the sake of sorting)
+  boid_t* grid = (boid_t*) malloc(n * sizeof(boid_t));
 
   srand(time(NULL));
   // Initializing grid
-  for (size_t i = 0; i < p; i++) {
-    for(size_t j = 0; j < p; j++) {
-      grid[i][j].pos_x = rand() % range_x;
-      grid[i][j].pos_y = rand() % range_y;
-      float is_obstacle = (float) rand() / (float) RAND_MAX;
-      if (is_obstacle < obs_fraction) {
-        grid[i][j].type = 0;
-        grid[i][j].vel_x = 0;
-        grid[i][j].vel_y = 0;
-      } else {
-        grid[i][j].type = 1;
-        grid[i][j].vel_x = 5;
-        grid[i][j].vel_y = 5;
-      }
-
-      // Print them
-      // print_boid_pos(&grid[i][j]);
-      // printf("\t\ttype %d\n", grid[i][j].type);
+  for(size_t j = 0; j < n; j++) {
+    grid[j].pos_x = rand() % range_x;
+    grid[j].pos_y = rand() % range_y;
+    float is_obstacle = (float) rand() / (float) RAND_MAX;
+    if (is_obstacle < obs_fraction) {
+      grid[j].type = 0;
+      grid[j].vel_x = 0;
+      grid[j].vel_y = 0;
+    } else {
+      grid[j].type = 1;
+      grid[j].vel_x = 5;
+      grid[j].vel_y = 5;
     }
+
+    // Print them
+    // print_boid_pos(&grid[i][j]);
+    // printf("\t\ttype %d\n", grid[i][j].type);
   }
 
 
