@@ -3,8 +3,28 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #include "sorting.h"
+
+int cmpfunc_pos_x(const boid_t* a, const boid_t* b) {
+  if (a->pos_x < b->pos_x) {
+    return 1;
+  } else {
+    return 0;
+  }
+  printf("%.2f - %.2f = %d\n", a->pos_x, b->pos_x, (int) (a->pos_x - b->pos_x));
+  return (int) (a->pos_x - b->pos_x);
+}
+
+int cmpfunc_pos_y(const boid_t* a, const boid_t* b) {
+  if (a->pos_y < b->pos_y) {
+    return 1;
+  } else {
+    return 0;
+  }
+  return (int) (a->pos_y - b->pos_y);
+}
 
 void print_boid_pos(boid_t* b) {
   printf("(%.2f, %.2f)", b->pos_x, b->pos_y);
@@ -17,7 +37,7 @@ int main(int argc, char* argv[]) {
   }
 
   int p = atoi(argv[1]);                // size of neighborhood grid
-  int n = p * p;                        // number of boids
+  int n = pow(2, p);                        // number of boids
   float obs_fraction = atof(argv[2]);   // fraction of obstacles
 
   if (obs_fraction < 0 || obs_fraction >= 1) {
@@ -37,24 +57,42 @@ int main(int argc, char* argv[]) {
 
   srand(time(NULL));
   // Initializing grid
-  for(size_t j = 0; j < n; j++) {
-    grid[j].pos_x = rand() % range_x;
-    grid[j].pos_y = rand() % range_y;
+  for(size_t i = 0; i < n; i++) {
+    grid[i].pos_x = rand() % range_x;
+    grid[i].pos_y = rand() % range_y;
     float is_obstacle = (float) rand() / (float) RAND_MAX;
     if (is_obstacle < obs_fraction) {
-      grid[j].type = 0;
-      grid[j].vel_x = 0;
-      grid[j].vel_y = 0;
+      grid[i].type = 0;
+      grid[i].vel_x = 0;
+      grid[i].vel_y = 0;
     } else {
-      grid[j].type = 1;
-      grid[j].vel_x = 5;
-      grid[j].vel_y = 5;
+      grid[i].type = 1;
+      grid[i].vel_x = 5;
+      grid[i].vel_y = 5;
     }
 
     // Print them
-    // print_boid_pos(&grid[i][j]);
-    // printf("\t\ttype %d\n", grid[i][j].type);
+    print_boid_pos(&grid[i]);
+    printf("\t\ttype %d\n", grid[i].type);
   }
+
+  sequential_merge_sort(grid, n, cmpfunc_pos_x);
+
+  printf("\n\nAFTER SORTING BY X:\n");
+  for(size_t i = 0; i < n; i++) {
+    print_boid_pos(&grid[i]);
+    printf("\t\ttype %d\n", grid[i].type);
+  }
+
+  sequential_merge_sort(grid, n, cmpfunc_pos_y);
+
+  printf("\n\nAFTER SORTING BY Y:\n");
+  for(size_t i = 0; i < n; i++) {
+    print_boid_pos(&grid[i]);
+    printf("\t\ttype %d\n", grid[i].type);
+  }
+
+  
 
 
 

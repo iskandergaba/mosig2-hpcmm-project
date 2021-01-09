@@ -22,6 +22,11 @@ void merge(boid_t *T, const size_t size, int(*cmp) (const boid_t* e1, const boid
   while ((i < size) && (j < 2 * size)) {
     if (cmp(&T[i], &T[j])) {
       X[k] = T[i];
+      //X[k].pos_x = T[i].pos_x;
+      //X[k].pos_y = T[i].pos_y;
+      //X[k].vel_x = T[i].vel_x;
+      //X[k].vel_y = T[i].vel_y;
+      //X[k].type  = T[i].type;
       i = i + 1;
     } else {
       X[k] = T[j];
@@ -33,14 +38,24 @@ void merge(boid_t *T, const size_t size, int(*cmp) (const boid_t* e1, const boid
   if (i < size) {
     for (; i < size; i++, k++) {
       X[k] = T[i];
+      //X[k].pos_x = T[i].pos_x;
+      //X[k].pos_y = T[i].pos_y;
+      //X[k].vel_x = T[i].vel_x;
+      //X[k].vel_y = T[i].vel_y;
+      //X[k].type  = T[i].type;
     }
   } else {
     for (; j < 2 * size; j++, k++) {
       X[k] = T[j];
+      //X[k].pos_x = T[j].pos_x;
+      //X[k].pos_y = T[j].pos_y;
+      //X[k].vel_x = T[j].vel_x;
+      //X[k].vel_y = T[j].vel_y;
+      //X[k].type  = T[j].type;
     }
   }
 
-  memcpy(T, X, 2 * size * sizeof(uint64_t));
+  memcpy(T, X, 2 * size * sizeof(boid_t));
   free(X);
 
   return;
