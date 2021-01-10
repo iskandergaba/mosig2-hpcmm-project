@@ -8,21 +8,10 @@
 #include "sorting.h"
 
 int cmpfunc_pos_x(const boid_t* a, const boid_t* b) {
-  if (a->pos_x < b->pos_x) {
-    return 1;
-  } else {
-    return 0;
-  }
-  printf("%.2f - %.2f = %d\n", a->pos_x, b->pos_x, (int) (a->pos_x - b->pos_x));
   return (int) (a->pos_x - b->pos_x);
 }
 
 int cmpfunc_pos_y(const boid_t* a, const boid_t* b) {
-  if (a->pos_y < b->pos_y) {
-    return 1;
-  } else {
-    return 0;
-  }
   return (int) (a->pos_y - b->pos_y);
 }
 

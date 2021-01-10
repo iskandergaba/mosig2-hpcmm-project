@@ -20,7 +20,7 @@ void merge(boid_t *T, const size_t size, int(*cmp) (const boid_t* e1, const boid
   size_t k = 0;
 
   while ((i < size) && (j < 2 * size)) {
-    if (cmp(&T[i], &T[j])) {
+    if (cmp(&T[i], &T[j]) < 0) {
       X[k] = T[i];
       //X[k].pos_x = T[i].pos_x;
       //X[k].pos_y = T[i].pos_y;
