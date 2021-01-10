@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "utils.h"
 
@@ -23,4 +24,10 @@ void print_boid_grid(boid_t* grid, int d) {
     }
     printf("\n");
   }
+}
+
+void normalize_vector(vector_t* v) {
+  float mag = sqrt(pow(v->x,2) + pow(v->y, 2));
+  v->x = v->x / mag;
+  v->y = v->y / mag;
 }
