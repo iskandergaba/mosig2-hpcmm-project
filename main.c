@@ -39,6 +39,7 @@ int main(int argc, char* argv[]) {
   int n = pow(2, p);                    // number of boids
   int d = pow(2, p/2);                  // size of grid across one dimension
   float obs_fraction = atof(argv[2]);   // fraction of obstacles
+  float obstacle_repulsion_factor = 3;
 
   if (obs_fraction < 0 || obs_fraction >= 1) {
     fprintf(stderr, "The fraction of obstacles should lie in [0, 1).\n");
@@ -118,7 +119,6 @@ int main(int argc, char* argv[]) {
   //    printf(" at indX=%zu and indY=%zu\n", indexX, indexY);
 
       // Initialize vectors for each influence
-      // TODO: enemies and obstacles
       vector_t  cohesion = {0, 0};
       vector_t  alignment = {0, 0};
       vector_t  separation = {0, 0};
@@ -154,6 +154,11 @@ int main(int argc, char* argv[]) {
               // Separation with all neighbors
               separation.x += neighbor->pos_x - (grid+i)->pos_x;
               separation.y += neighbor->pos_y - (grid+i)->pos_y;
+              // if neighbor is an obstacle separate more
+              if (neighbor->type == 0) {
+                separation.x *= obstacle_repulsion_factor;
+                separation.y *= obstacle_repulsion_factor;
+              }
 
             }
           }
@@ -182,8 +187,9 @@ int main(int argc, char* argv[]) {
       grid[i].vel_x += alignment.x + cohesion.x + separation.x;
       grid[i].vel_y += alignment.y + cohesion.y + separation.y;
       // update position of boid
-      grid[i].pos_x += grid[i].vel_x;
-      grid[i].pos_y += grid[i].vel_y;
+      // TODO: this modulo thing is horrible, fix it
+      grid[i].pos_x = (int)(grid[i].pos_x + grid[i].vel_x) % range_x;
+      grid[i].pos_y = (int)(grid[i].pos_y + grid[i].vel_y) % range_y;
     }
   }
   // Printing after the iterations
