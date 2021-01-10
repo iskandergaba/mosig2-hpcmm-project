@@ -22,10 +22,6 @@ void initialize_grid(boid_t* grid, size_t n, size_t range_x, size_t range_y, flo
       grid[i].vel_x = 5;
       grid[i].vel_y = 5;
     }
-
-    // Print them
-    print_boid_pos(&grid[i]);
-    printf("\t\ttype %d\n", grid[i].type);
   }
 }
 
@@ -59,9 +55,13 @@ int main(int argc, char* argv[]) {
   // Allocate grid as 1D array (easier for the sake of sorting)
   boid_t* grid = (boid_t*) malloc(n * sizeof(boid_t));
 
-  srand(time(NULL));
   // Initializing grid
+  srand(time(NULL));
   initialize_grid(grid, n, range_x, range_y, obs_fraction);
+
+  // Printing after sorting
+  printf("Before sorting:\n");
+  print_boid_grid(grid, d);
 
   // Sort by position x4.00
   sequential_merge_sort(grid, n, cmpfunc_pos_x);
@@ -73,14 +73,47 @@ int main(int argc, char* argv[]) {
 
   // Printing after sorting
   printf("\n\nAfter sorting:\n");
-
   print_boid_grid(grid, d);
-//  for(size_t i = 0; i < n; i++) {
-//    if (i % d == 0) {
-//      printf("---------------\n");
-//    }
-//    print_boid_pos(&grid[i]);
-//    printf("\n");
-//  }
+
+/*  for(size_t i = 0; i < n; i++) {
+    if (i % d == 0) {
+      printf("---------------\n");
+    }
+    print_boid_pos(&grid[i]);
+    printf("\n");
+  } */
+
+  // Grouping               Influence
+  // Repulsion              Influence
+  // Direction Following    Influence
+  // Obstacles and Enemies  Influence
+
+  printf("\n");
+  int r = 2;
+  // loop over the boids
+  for (size_t i = 0; i < n; i++) {
+    // get indexX and indexY
+    size_t indexX = i / d;
+    size_t indexY = i % d;
+    printf("\nNeighbors of: ");
+    print_boid_pos(&grid[i]);
+    printf(" at indX=%zu and indY=%zu\n", indexX, indexY);
+    // loop over the neighbors of the boid
+    for (int x = -r; x <= r; x++) {
+      for (int y = -r; y <= r; y++) {
+        // access grid[indexX+x][indexY+y]
+        if (x != 0 || y != 0) {
+          int indXNeigh = indexX+x;
+          int indYNeigh = indexY+y;
+          if (indXNeigh >= 0 && indXNeigh < d && indYNeigh >= 0 && indYNeigh < d) {
+            print_boid_pos(&grid[indXNeigh * d + indYNeigh]);
+            printf(" at x=%d and y=%d",x,y);
+            printf("\n");
+          }
+        }
+      }
+    }
+  }
+
   return 0;
 }
