@@ -63,17 +63,6 @@ int main(int argc, char* argv[]) {
   printf("Before sorting:\n");
   print_boid_grid(grid, d);
 
-  // Sort by position x4.00
-  sequential_merge_sort(grid, n, cmpfunc_pos_x);
-
-  // Now sort each column of the equivalent 2D array by pos_y
-  for (size_t i = 0; i < d; i++) {
-    sequential_merge_sort(grid + i*d, d, cmpfunc_pos_y);
-  }
-
-  // Printing after sorting
-  printf("\n\nAfter sorting:\n");
-  print_boid_grid(grid, d);
 
 /*  for(size_t i = 0; i < n; i++) {
     if (i % d == 0) {
@@ -83,37 +72,122 @@ int main(int argc, char* argv[]) {
     printf("\n");
   } */
 
-  // Grouping               Influence
-  // Repulsion              Influence
-  // Direction Following    Influence
+  // Grouping               Influence   aka   COHESION
+  // Repulsion              Influence   aka   SEPARATION
+  // Direction Following    Influence   aka   ALIGNMENT
   // Obstacles and Enemies  Influence
 
   printf("\n");
+  size_t n_iterations = 100;
   int r = 2;
-  // loop over the boids
-  for (size_t i = 0; i < n; i++) {
-    // get indexX and indexY
-    size_t indexX = i / d;
-    size_t indexY = i % d;
-    printf("\nNeighbors of: ");
-    print_boid_pos(&grid[i]);
-    printf(" at indX=%zu and indY=%zu\n", indexX, indexY);
-    // loop over the neighbors of the boid
-    for (int x = -r; x <= r; x++) {
-      for (int y = -r; y <= r; y++) {
-        // access grid[indexX+x][indexY+y]
-        if (x != 0 || y != 0) {
-          int indXNeigh = indexX+x;
-          int indYNeigh = indexY+y;
-          if (indXNeigh >= 0 && indXNeigh < d && indYNeigh >= 0 && indYNeigh < d) {
-            print_boid_pos(&grid[indXNeigh * d + indYNeigh]);
-            printf(" at x=%d and y=%d",x,y);
-            printf("\n");
+  for (size_t k = 0; k < n_iterations; k++) {
+
+    /****************
+     * SORTING PASS *
+     ****************/
+    // Sort by position x
+    sequential_merge_sort(grid, n, cmpfunc_pos_x);
+    // Now sort each column of the equivalent 2D array by pos_y
+    for (size_t i = 0; i < d; i++) {
+      sequential_merge_sort(grid + i*d, d, cmpfunc_pos_y);
+    }
+    // Printing after sorting
+    if (k == 0) {
+      printf("\n\nAfter sorting:\n");
+      print_boid_grid(grid, d);
+    }
+
+
+
+
+    /***********************
+     * UPDATING VELOCITIES *
+     ***********************/
+    // loop over the boids
+    for (size_t i = 0; i < n; i++) {
+      // if current element is an obstacle, do nothing
+      if (grid[i].type == 0)
+        break;
+
+      // get indexX and indexY
+      size_t indexX = i / d;
+      size_t indexY = i % d;
+
+  //    printf("\nNeighbors of: ");
+  //    print_boid_pos(&grid[i]);
+  //    printf(" at indX=%zu and indY=%zu\n", indexX, indexY);
+
+      // Initialize vectors for each influence
+      // TODO: enemies and obstacles
+      vector_t  cohesion = {0, 0};
+      vector_t  alignment = {0, 0};
+      vector_t  separation = {0, 0};
+      size_t    n_neighbors = 0;
+      size_t    n_neighbors_type= 0;
+      boid_t*   neighbor;
+
+      // loop over the neighbors of the boid
+      for (int x = -r; x <= r; x++) {
+        for (int y = -r; y <= r; y++) {
+          // access grid[indexX+x][indexY+y]
+          if (x != 0 || y != 0) {
+            int indXNeigh = indexX+x;
+            int indYNeigh = indexY+y;
+            if (indXNeigh >= 0 && indXNeigh < d && indYNeigh >= 0 && indYNeigh < d) {
+  //          print_boid_pos(&grid[indXNeigh * d + indYNeigh]);
+  //          printf(" at x=%d and y=%d",x,y);
+  //          printf("\n");
+
+              neighbor = grid + indXNeigh * d + indYNeigh;
+              n_neighbors++;
+
+              // Cohesion and Alignment only with neighbors of the same typ
+              if (neighbor->type == grid[i].type) {
+                n_neighbors_type++;
+                cohesion.x += neighbor->pos_x;
+                cohesion.y += neighbor->pos_y;
+
+                alignment.x += neighbor->vel_x;
+                alignment.y += neighbor->vel_y;
+              }
+
+              // Separation with all neighbors
+              separation.x += neighbor->pos_x - (grid+i)->pos_x;
+              separation.y += neighbor->pos_y - (grid+i)->pos_y;
+
+            }
           }
         }
       }
+
+      // Finalizing vectors
+      if (n_neighbors_type > 0) {
+        cohesion.x = cohesion.x / n_neighbors_type;
+        cohesion.y = cohesion.y / n_neighbors_type;
+        normalize_vector(&cohesion);
+
+        alignment.x = alignment.x / n_neighbors_type;
+        alignment.y = alignment.y / n_neighbors_type;
+        normalize_vector(&alignment);
+      }
+      // keep this if statement because later we will compute visual field
+      if (n_neighbors > 0) {
+        separation.x *= -1 / n_neighbors;
+        separation.y *= -1 / n_neighbors;
+        normalize_vector(&separation);
+      }
+
+      // update velocity of boid
+      // TODO: weights
+      grid[i].vel_x += alignment.x + cohesion.x + separation.x;
+      grid[i].vel_y += alignment.y + cohesion.y + separation.y;
+      // update position of boid
+      grid[i].pos_x += grid[i].vel_x;
+      grid[i].pos_y += grid[i].vel_y;
     }
   }
-
+  // Printing after the iterations
+  printf("\n\nAfter %zu iterations:\n", n_iterations);
+  print_boid_grid(grid, d);
   return 0;
 }
