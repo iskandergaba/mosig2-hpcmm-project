@@ -7,26 +7,19 @@
 
 #include "sorting.h"
 
-int cmpfunc_pos_x(const boid_t* a, const boid_t* b) {
-  return (int) (a->pos_x - b->pos_x);
-}
-
-int cmpfunc_pos_y(const boid_t* a, const boid_t* b) {
-  return (int) (a->pos_y - b->pos_y);
-}
-
-void print_boid_pos(boid_t* b) {
-  printf("(%.2f, %.2f)", b->pos_x, b->pos_y);
-}
-
 int main(int argc, char* argv[]) {
   if (argc < 3) {
     fprintf(stderr, "Usage:  ./main.run <sqrt(number_of_boids)>  <fraction of obstacles>\n");
     return -1;
   }
 
-  int p = atoi(argv[1]);                // size of neighborhood grid
-  int n = pow(2, p);                        // number of boids
+  int p = atoi(argv[1]);                // log_2(number of boids)
+  if (p % 2 == 1) {
+    fprintf(stderr, "Please provide an even number.\n");
+    return -1;
+  }
+  int n = pow(2, p);                    // number of boids
+  int d = pow(2, p/2);                  // size of grid across one dimension
   float obs_fraction = atof(argv[2]);   // fraction of obstacles
 
   if (obs_fraction < 0 || obs_fraction >= 1) {
@@ -65,25 +58,24 @@ int main(int argc, char* argv[]) {
     printf("\t\ttype %d\n", grid[i].type);
   }
 
+  // Sort by position x4.00
   sequential_merge_sort(grid, n, cmpfunc_pos_x);
 
-  printf("\n\nAFTER SORTING BY X:\n");
-  for(size_t i = 0; i < n; i++) {
-    print_boid_pos(&grid[i]);
-    printf("\t\ttype %d\n", grid[i].type);
+  // Now sort each column of the equivalent 2D array by pos_y
+  for (size_t i = 0; i < d; i++) {
+    sequential_merge_sort(grid + i*d, d, cmpfunc_pos_y);
   }
 
-  sequential_merge_sort(grid, n, cmpfunc_pos_y);
+  // Printing after sorting
+  printf("\n\nAfter sorting:\n");
 
-  printf("\n\nAFTER SORTING BY Y:\n");
-  for(size_t i = 0; i < n; i++) {
-    print_boid_pos(&grid[i]);
-    printf("\t\ttype %d\n", grid[i].type);
-  }
-
-  
-
-
-
+  print_boid_grid(grid, d);
+//  for(size_t i = 0; i < n; i++) {
+//    if (i % d == 0) {
+//      printf("---------------\n");
+//    }
+//    print_boid_pos(&grid[i]);
+//    printf("\n");
+//  }
   return 0;
 }

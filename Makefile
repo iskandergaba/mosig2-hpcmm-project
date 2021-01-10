@@ -8,7 +8,7 @@ HEADER_FILES = $(wildcard *.h)
 
 all: $(EXEC)
 
-%.run: %.o sorting.o
+%.run: %.o sorting.o utils.o
 	$(CC) $(LDFLAGS) -lm -o $@ $^
 
 %.o: %.c $(HEADER_FILES)
