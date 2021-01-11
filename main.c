@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
   // Radius in Neighborhood cells
   int neighborhood = 2;
   // Visibility radius
-  float r = 10;
+  float r = 25;
   for (size_t k = 0; k < n_iterations; k++)
   {
 
@@ -131,11 +131,11 @@ int main(int argc, char *argv[])
     for (size_t i = 0; i < n; i++)
     {
       // get current boid
-      boid_t curr_boid = grid[i];
+      boid_t *curr_boid = grid + i;
 
       // if current element is an obstacle, do nothing
-      if (curr_boid.type == 0)
-        break;
+      if (curr_boid->type == 0)
+        continue;
 
       // get indexX and indexY
       size_t indexX = i / d;
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
 
             neighbor = grid + indXNeigh * d + indYNeigh;
             // Check if the neighbor is visible to the current boid
-            if (distance(&curr_boid, neighbor) <= r)
+            if (distance(curr_boid, neighbor) <= r)
             {
               n_neighbors++;
             }
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
             }
 
             // Cohesion and Alignment only with neighbors of the same type
-            if (neighbor->type == curr_boid.type)
+            if (neighbor->type == curr_boid->type)
             {
               n_neighbors_type++;
               cohesion.x += neighbor->pos_x;
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
             separation.x += neighbor->pos_x - (grid + i)->pos_x;
             separation.y += neighbor->pos_y - (grid + i)->pos_y;
             // if neighbor is an obstacle OR enemy separate more
-            if (neighbor->type != curr_boid.type)
+            if (neighbor->type != curr_boid->type)
             {
               separation.x *= repulsion_factor[neighbor->type];
               separation.y *= repulsion_factor[neighbor->type];
@@ -222,18 +222,30 @@ int main(int argc, char *argv[])
       }
 
       // update velocity of boid
-      grid[i].vel_x += alignment_weights[curr_boid.type - 1] * alignment.x +
-                       cohesion_weights[curr_boid.type - 1] * cohesion.x +
-                       separation_weights[curr_boid.type - 1] * separation.x;
+      curr_boid->vel_x += alignment_weights[curr_boid->type - 1] * alignment.x +
+                          cohesion_weights[curr_boid->type - 1] * cohesion.x +
+                          separation_weights[curr_boid->type - 1] * separation.x;
 
-      grid[i].vel_y += alignment_weights[curr_boid.type - 1] * alignment.y +
-                       cohesion_weights[curr_boid.type - 1] * cohesion.y +
-                       separation_weights[curr_boid.type - 1] * separation.y;
+      curr_boid->vel_y += alignment_weights[curr_boid->type - 1] * alignment.y +
+                          cohesion_weights[curr_boid->type - 1] * cohesion.y +
+                          separation_weights[curr_boid->type - 1] * separation.y;
       // update position of boid
       // TODO: this modulo thing is horrible, fix it
-      grid[i].pos_x = (int)(grid[i].pos_x + grid[i].vel_x) % range_x;
-      grid[i].pos_y = (int)(grid[i].pos_y + grid[i].vel_y) % range_y;
+      curr_boid->pos_x = (int)(curr_boid->pos_x + curr_boid->vel_x) % range_x;
+      curr_boid->pos_y = (int)(curr_boid->pos_y + curr_boid->vel_y) % range_y;
     }
+  }
+
+  /*********************
+  * FINAL SORTING PASS *
+  *   FOR AESTHETICS   *
+  **********************/
+  // Sort by position x
+  sequential_merge_sort(grid, n, cmpfunc_pos_x);
+  // Now sort each column of the equivalent 2D array by pos_y
+  for (size_t i = 0; i < d; i++)
+  {
+    sequential_merge_sort(grid + i * d, d, cmpfunc_pos_y);
   }
   // Printing after the iterations
   printf("\n\nAfter %zu iterations:\n", n_iterations);
