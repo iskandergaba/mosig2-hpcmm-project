@@ -5,3 +5,4 @@ TODO: maybe change position and velocity to be of type vector_t
 TODO: maybe normalize velocity with constant speed per type of species
 
 TODO: PARALLELIZE
+TODO: Add code to measure time
