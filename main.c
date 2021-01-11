@@ -79,6 +79,13 @@ int main(int argc, char* argv[]) {
   // Obstacles and Enemies  Influence
 
   printf("\n");
+
+
+
+  float cohesion_weights[5] = {0, 1, 1.2, 1.3, 1.4};
+  float separation_weights[5] = {0, 1, 1.2, 1.3, 1.4};
+  float alignment_weights[5] = {0, 1, 1.2, 1.3, 1.4};
+
   size_t n_iterations = 100;
   int r = 2;
   for (size_t k = 0; k < n_iterations; k++) {
@@ -183,9 +190,14 @@ int main(int argc, char* argv[]) {
       }
 
       // update velocity of boid
-      // TODO: weights
-      grid[i].vel_x += alignment.x + cohesion.x + separation.x;
-      grid[i].vel_y += alignment.y + cohesion.y + separation.y;
+      int curr_type = grid[i].type;
+      grid[i].vel_x +=  alignment_weights[curr_type]  * alignment.x   +
+                        cohesion_weights[curr_type]   * cohesion.x    +
+                        separation_weights[curr_type] * separation.x  ;
+
+      grid[i].vel_y +=  alignment_weights[curr_type]  * alignment.y   +
+                        cohesion_weights[curr_type]   * cohesion.y    +
+                        separation_weights[curr_type] * separation.y  ;
       // update position of boid
       // TODO: this modulo thing is horrible, fix it
       grid[i].pos_x = (int)(grid[i].pos_x + grid[i].vel_x) % range_x;
