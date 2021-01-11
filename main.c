@@ -39,7 +39,6 @@ int main(int argc, char* argv[]) {
   int n = pow(2, p);                    // number of boids
   int d = pow(2, p/2);                  // size of grid across one dimension
   float obs_fraction = atof(argv[2]);   // fraction of obstacles
-  float obstacle_repulsion_factor = 3;
 
   if (obs_fraction < 0 || obs_fraction >= 1) {
     fprintf(stderr, "The fraction of obstacles should lie in [0, 1).\n");
@@ -81,10 +80,15 @@ int main(int argc, char* argv[]) {
   printf("\n");
 
 
-
-  float cohesion_weights[5] = {0, 1, 1.2, 1.3, 1.4};
-  float separation_weights[5] = {0, 1, 1.2, 1.3, 1.4};
-  float alignment_weights[5] = {0, 1, 1.2, 1.3, 1.4};
+  // Weights are index by species type - 1, since we do not need a field for
+  // type 0 (obstacles
+  // TODO: currently we only have obstacle or boid - may or may not add enemies
+  float cohesion_weights  [1] = {1};
+  float separation_weights[1] = {1};
+  float alignment_weights [1] = {1};
+  // repulsion factor increases seaparation of species from enemies/obstacles
+  // than their own type
+  float repulsion_factor  [2] = {3, 1};
 
   size_t n_iterations = 100;
   int r = 2;
@@ -121,6 +125,8 @@ int main(int argc, char* argv[]) {
       size_t indexX = i / d;
       size_t indexY = i % d;
 
+      // get current boid type
+      int curr_type = grid[i].type;
   //    printf("\nNeighbors of: ");
   //    print_boid_pos(&grid[i]);
   //    printf(" at indX=%zu and indY=%zu\n", indexX, indexY);
@@ -149,7 +155,7 @@ int main(int argc, char* argv[]) {
               n_neighbors++;
 
               // Cohesion and Alignment only with neighbors of the same typ
-              if (neighbor->type == grid[i].type) {
+              if (neighbor->type == curr_type) {
                 n_neighbors_type++;
                 cohesion.x += neighbor->pos_x;
                 cohesion.y += neighbor->pos_y;
@@ -161,10 +167,10 @@ int main(int argc, char* argv[]) {
               // Separation with all neighbors
               separation.x += neighbor->pos_x - (grid+i)->pos_x;
               separation.y += neighbor->pos_y - (grid+i)->pos_y;
-              // if neighbor is an obstacle separate more
-              if (neighbor->type == 0) {
-                separation.x *= obstacle_repulsion_factor;
-                separation.y *= obstacle_repulsion_factor;
+              // if neighbor is an obstacle OR enemy separate more
+              if (neighbor->type != curr_type) {
+                separation.x *= repulsion_factor[neighbor->type];
+                separation.y *= repulsion_factor[neighbor->type];
               }
 
             }
@@ -190,14 +196,13 @@ int main(int argc, char* argv[]) {
       }
 
       // update velocity of boid
-      int curr_type = grid[i].type;
-      grid[i].vel_x +=  alignment_weights[curr_type]  * alignment.x   +
-                        cohesion_weights[curr_type]   * cohesion.x    +
-                        separation_weights[curr_type] * separation.x  ;
+      grid[i].vel_x +=  alignment_weights [curr_type-1] * alignment.x   +
+                        cohesion_weights  [curr_type-1] * cohesion.x    +
+                        separation_weights[curr_type-1] * separation.x  ;
 
-      grid[i].vel_y +=  alignment_weights[curr_type]  * alignment.y   +
-                        cohesion_weights[curr_type]   * cohesion.y    +
-                        separation_weights[curr_type] * separation.y  ;
+      grid[i].vel_y +=  alignment_weights [curr_type-1] * alignment.y   +
+                        cohesion_weights  [curr_type-1] * cohesion.y    +
+                        separation_weights[curr_type-1] * separation.y  ;
       // update position of boid
       // TODO: this modulo thing is horrible, fix it
       grid[i].pos_x = (int)(grid[i].pos_x + grid[i].vel_x) % range_x;
