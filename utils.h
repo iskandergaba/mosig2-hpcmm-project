@@ -3,13 +3,13 @@
 
 typedef struct boid
 {
-  // position vector
+  // Position vector
   float pos_x;
   float pos_y;
-  // velocity vector
+  // Velocity vector
   float vel_x;
   float vel_y;
-  // type: 0 if obstacle and 1 if boid
+  // Type: 0 if obstacle and 1 if boid
   int type;
 } boid_t;
 
@@ -25,7 +25,9 @@ int cmpfunc_pos_y(const boid_t *a, const boid_t *b);
 
 // Print the position of a boid
 void print_boid_pos(boid_t *b);
+
 // Print the grid of boids
 void print_boid_grid(boid_t *b, int d);
+
 // Normalize a vector
 void normalize_vector(vector_t *v);
