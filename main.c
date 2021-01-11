@@ -11,21 +11,29 @@ void initialize_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, flo
 {
   for (size_t i = 0; i < n; i++)
   {
-    grid[i].pos_x = rand() % range_x;
-    grid[i].pos_y = rand() % range_y;
+    grid[i].position = malloc(sizeof(vector_t));
+    grid[i].velocity = malloc(sizeof(vector_t));
+
+    grid[i].position->x = rand() % range_x;
+    grid[i].position->y = rand() % range_y;
+
     float is_obstacle = (float)rand() / (float)RAND_MAX;
     if (is_obstacle < obs_fraction)
     {
       grid[i].type = 0;
-      grid[i].vel_x = 0;
-      grid[i].vel_y = 0;
+      grid[i].velocity->x = 0;
+      grid[i].velocity->y = 0;
     }
     else
     {
       grid[i].type = 1;
-      grid[i].vel_x = 5;
-      grid[i].vel_y = 5;
+      grid[i].velocity->x = 5;
+      grid[i].velocity->y = 5;
     }
+
+    vector_t *velocity = malloc(sizeof(vector_t));
+    velocity->x, velocity->y = is_obstacle < obs_fraction ? 0, 0 : 5, 5;
+    grid[i].velocity = velocity;
   }
 }
 
@@ -182,16 +190,16 @@ int main(int argc, char *argv[])
             if (neighbor->type == curr_boid->type)
             {
               n_neighbors_type++;
-              cohesion.x += neighbor->pos_x;
-              cohesion.y += neighbor->pos_y;
+              cohesion.x += neighbor->position->x;
+              cohesion.y += neighbor->position->y;
 
-              alignment.x += neighbor->vel_x;
-              alignment.y += neighbor->vel_y;
+              alignment.x += neighbor->velocity->x;
+              alignment.y += neighbor->velocity->y;
             }
 
             // Separation with all neighbors
-            separation.x += neighbor->pos_x - (grid + i)->pos_x;
-            separation.y += neighbor->pos_y - (grid + i)->pos_y;
+            separation.x += neighbor->position->x - (grid + i)->position->x;
+            separation.y += neighbor->position->y - (grid + i)->position->y;
             // if neighbor is an obstacle OR enemy separate more
             if (neighbor->type != curr_boid->type)
             {
@@ -222,17 +230,17 @@ int main(int argc, char *argv[])
       }
 
       // update velocity of boid
-      curr_boid->vel_x += alignment_weights[curr_boid->type - 1] * alignment.x +
-                          cohesion_weights[curr_boid->type - 1] * cohesion.x +
-                          separation_weights[curr_boid->type - 1] * separation.x;
+      curr_boid->velocity->x += alignment_weights[curr_boid->type - 1] * alignment.x +
+                                cohesion_weights[curr_boid->type - 1] * cohesion.x +
+                                separation_weights[curr_boid->type - 1] * separation.x;
 
-      curr_boid->vel_y += alignment_weights[curr_boid->type - 1] * alignment.y +
-                          cohesion_weights[curr_boid->type - 1] * cohesion.y +
-                          separation_weights[curr_boid->type - 1] * separation.y;
+      curr_boid->velocity->y += alignment_weights[curr_boid->type - 1] * alignment.y +
+                                cohesion_weights[curr_boid->type - 1] * cohesion.y +
+                                separation_weights[curr_boid->type - 1] * separation.y;
       // update position of boid
       // TODO: this modulo thing is horrible, fix it
-      curr_boid->pos_x = (int)(curr_boid->pos_x + curr_boid->vel_x) % range_x;
-      curr_boid->pos_y = (int)(curr_boid->pos_y + curr_boid->vel_y) % range_y;
+      curr_boid->position->x = (int)(curr_boid->position->x + curr_boid->velocity->x) % range_x;
+      curr_boid->position->y = (int)(curr_boid->position->y + curr_boid->velocity->y) % range_y;
     }
   }
 

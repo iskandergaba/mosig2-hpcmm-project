@@ -1,2 +1,8 @@
+# VS Code configuration
+.vscode/*
+
+# Executables
 *.run
+
+# Dummy test file for Hady
 test.c
