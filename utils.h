@@ -23,6 +23,9 @@ typedef struct vector
 int cmpfunc_pos_x(const boid_t *a, const boid_t *b);
 int cmpfunc_pos_y(const boid_t *a, const boid_t *b);
 
+// Distance between two boids
+float distance(const boid_t *a, const boid_t *b);
+
 // Print the position of a boid
 void print_boid_pos(boid_t *b);
 
