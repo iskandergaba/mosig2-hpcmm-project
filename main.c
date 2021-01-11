@@ -77,6 +77,10 @@ int main(int argc, char* argv[]) {
   // Direction Following    Influence   aka   ALIGNMENT
   // Obstacles and Enemies  Influence
 
+  // influence implementations were inspired by:
+  // https://gamedevelopment.tutsplus.com/tutorials/3-simple-rules-of-flocking-behaviors-alignment-cohesion-and-separation--gamedev-3444
+  // They match with the paper
+
   printf("\n");
 
 
