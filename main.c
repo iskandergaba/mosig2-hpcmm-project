@@ -4,6 +4,7 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <sys/time.h>
 
 #include "sorting.h"
 
@@ -112,6 +113,11 @@ int main(int argc, char *argv[])
   int neighborhood = 2;
   // Visibility radius
   float r = 25;
+
+  // Execution time tracking variables
+  struct timeval start, end;
+  // Start timer
+  gettimeofday(&start, NULL);
   for (size_t k = 0; k < n_iterations; k++)
   {
 
@@ -258,5 +264,13 @@ int main(int argc, char *argv[])
   // Printing after the iterations
   printf("\n\nAfter %zu iterations:\n", n_iterations);
   print_boid_grid(grid, d);
+
+  // Stop timer
+  gettimeofday(&end, NULL);
+
+  double time_taken = end.tv_sec + end.tv_usec / 1e6 -
+                      start.tv_sec - start.tv_usec / 1e6; // in seconds
+
+  printf("\nExecution time: %f seconds\n", time_taken);
   return 0;
 }
