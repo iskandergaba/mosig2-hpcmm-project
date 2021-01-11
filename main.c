@@ -95,6 +95,7 @@ int main(int argc, char* argv[]) {
   float repulsion_factor  [2] = {3, 1};
 
   size_t n_iterations = 100;
+  // Radius of detection
   int r = 2;
   for (size_t k = 0; k < n_iterations; k++) {
 
@@ -158,7 +159,7 @@ int main(int argc, char* argv[]) {
               neighbor = grid + indXNeigh * d + indYNeigh;
               n_neighbors++;
 
-              // Cohesion and Alignment only with neighbors of the same typ
+              // Cohesion and Alignment only with neighbors of the same type
               if (neighbor->type == curr_type) {
                 n_neighbors_type++;
                 cohesion.x += neighbor->pos_x;
