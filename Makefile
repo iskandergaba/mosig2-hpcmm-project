@@ -9,10 +9,10 @@ HEADER_FILES = $(wildcard *.h)
 all: $(EXEC)
 
 %.run: %.o sorting.o utils.o
-	$(CC) $(LDFLAGS) -lm -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ -lm
 
 %.o: %.c $(HEADER_FILES)
-	$(CC) -c $(CONFIG_FLAGS) $(CFLAGS) $< -lm -o $@
+	$(CC) -c $(CONFIG_FLAGS) $(CFLAGS) $< -o $@ -lm
 
 clean:
 	rm -f $(EXEC) *.o *~
