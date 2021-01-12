@@ -2,5 +2,6 @@ TODO: maybe add enemies
 TODO: fix horrible modulo thing (TODO is in code)
 TODO: work with integers only instead of float??
 TODO: maybe normalize velocity with constant speed per type of species
+TODO: Add vision angle
 
 TODO: PARALLELIZE
