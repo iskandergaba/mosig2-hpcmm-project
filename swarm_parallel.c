@@ -41,22 +41,29 @@ void initialize_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, flo
 
 int main(int argc, char *argv[])
 {
-  if (argc < 3)
+  if (argc < 4)
   {
-    fprintf(stderr, "Usage:  ./main.run <sqrt(number_of_boids)> <fraction of obstacles> <verbose>\n");
+    fprintf(stderr, "Usage:  ./swarm_parallel.run <num_trheads> <sqrt(number_of_boids)> <fraction of obstacles>\n");
     return -1;
   }
 
-  int p = atoi(argv[1]); // log_2(number of boids)
+  int nthreads = atoi(argv[1]); // log_2(number of boids)
+  if (nthreads % 2 == 1)
+  {
+    fprintf(stderr, "Please provide an even number.\n");
+    return -1;
+  }
+
+  int p = atoi(argv[2]); // log_2(number of boids)
   if (p % 2 == 1)
   {
     fprintf(stderr, "Please provide an even number.\n");
     return -1;
   }
 
-  int n = pow(p, 2);                  // number of boids
-  int d = p;                          // size of grid across one dimension
-  float obs_fraction = atof(argv[2]); // fraction of obstacles
+  int n = pow(p, 2); // number of boids
+  int d = p;         // size of grid across one dimension
+  float obs_fraction = atof(argv[3]); // fraction of obstacles
 
   if (obs_fraction < 0 || obs_fraction >= 1)
   {
@@ -64,7 +71,7 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  bool verbose = argc >= 4 ? atoi(argv[3]) : false;
+  bool verbose = argc >= 5 ? atoi(argv[4]) : false;
 
   // our boids will be positioned in:
   // x \in [0, range_x)
@@ -124,18 +131,19 @@ int main(int argc, char *argv[])
   struct timeval start, end;
   // Start timer
   gettimeofday(&start, NULL);
+
   for (size_t k = 0; k < n_iterations; k++)
   {
 
-    /****************
-     * SORTING PASS *
-     ****************/
+    /*************************
+     * PARALLEL SORTING PASS *
+     *************************/
     // Sort by position x
-    sequential_merge_sort(grid, n, cmpfunc_pos_x);
+    parallel_merge_sort(grid, n, cmpfunc_pos_x);
     // Now sort each column of the equivalent 2D array by pos_y
     for (size_t i = 0; i < d; i++)
     {
-      sequential_merge_sort(grid + i * d, d, cmpfunc_pos_y);
+      parallel_merge_sort(grid + i * d, d, cmpfunc_pos_y);
     }
     // Printing after sorting
     if (verbose && k == 0)
@@ -147,7 +155,12 @@ int main(int argc, char *argv[])
     /***********************
      * UPDATING VELOCITIES *
      ***********************/
-    // loop over the boids
+    // loop over the boids.
+    // Many schedulig possibilities here (static, dynamic, guided, etc.)
+    // Strategies explained here: http://jakascorner.com/blog/2016/06/omp-for-scheduling.html
+//#pragma omp parallel for schedule(static) num_threads(nthreads)
+//#pragma omp parallel for schedule(dynamic, 8) num_threads(nthreads)
+#pragma omp parallel for schedule(guided) num_threads(nthreads)
     for (size_t i = 0; i < n; i++)
     {
       // get current boid
@@ -256,16 +269,16 @@ int main(int argc, char *argv[])
     }
   }
 
-  /*********************
-  * FINAL SORTING PASS *
-  *   FOR AESTHETICS   *
-  **********************/
+  /******************************
+  * FINAL PARALLEL SORTING PASS *
+  *       FOR AESTHETICS        *
+  *******************************/
   // Sort by position x
-  sequential_merge_sort(grid, n, cmpfunc_pos_x);
+  parallel_merge_sort(grid, n, cmpfunc_pos_x);
   // Now sort each column of the equivalent 2D array by pos_y
   for (size_t i = 0; i < d; i++)
   {
-    sequential_merge_sort(grid + i * d, d, cmpfunc_pos_y);
+    parallel_merge_sort(grid + i * d, d, cmpfunc_pos_y);
   }
   // Printing after the iterations
   if (verbose)
