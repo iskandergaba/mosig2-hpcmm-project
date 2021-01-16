@@ -47,22 +47,21 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  int nthreads = atoi(argv[1]); // log_2(number of boids)
-  if (nthreads % 2 == 1)
+  int nthreads = atoi(argv[1]);
+  if (nthreads < 1)
   {
-    fprintf(stderr, "Please provide an even number.\n");
+    fprintf(stderr, "Please provide a positive number of threads.\n");
     return -1;
   }
 
-  int p = atoi(argv[2]); // log_2(number of boids)
-  if (p % 2 == 1)
+  int d = atoi(argv[2]); // Grid dimension (i.e. sqrt(number of boids))
+  if (d < 1)
   {
-    fprintf(stderr, "Please provide an even number.\n");
+    fprintf(stderr, "Please provide a positive number for the size of grid.\n");
     return -1;
   }
 
-  int n = pow(p, 2); // number of boids
-  int d = p;         // size of grid across one dimension
+  int n = pow(d, 2); // number of boids
   float obs_fraction = atof(argv[3]); // fraction of obstacles
 
   if (obs_fraction < 0 || obs_fraction >= 1)
@@ -94,14 +93,6 @@ int main(int argc, char *argv[])
     printf("\n");
   }
 
-  /*  for(size_t i = 0; i < n; i++) {
-    if (i % d == 0) {
-      printf("---------------\n");
-    }
-    print_boid_pos(&grid[i]);
-    printf("\n");
-  } */
-
   // Grouping               Influence   aka   COHESION
   // Repulsion              Influence   aka   SEPARATION
   // Direction Following    Influence   aka   ALIGNMENT
@@ -112,7 +103,7 @@ int main(int argc, char *argv[])
   // They match with the paper
 
   // Weights are index by species type - 1, since we do not need a field for
-  // type 0 (obstacles
+  // type 0 (obstacles)
   // TODO: currently we only have obstacle or boid - may or may not add enemies
   float cohesion_weights[1] = {1};
   float separation_weights[1] = {1};

@@ -47,15 +47,14 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  int p = atoi(argv[1]); // log_2(number of boids)
-  if (p % 2 == 1)
+  int d = atoi(argv[1]); // Grid dimension (i.e. sqrt(number of boids))
+  if (d < 1)
   {
-    fprintf(stderr, "Please provide an even number.\n");
+    fprintf(stderr, "Please provide a positive number for the size of grid.\n");
     return -1;
   }
 
-  int n = pow(p, 2);                  // number of boids
-  int d = p;                          // size of grid across one dimension
+  int n = pow(d, 2);                  // number of boids
   float obs_fraction = atof(argv[2]); // fraction of obstacles
 
   if (obs_fraction < 0 || obs_fraction >= 1)
