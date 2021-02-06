@@ -31,8 +31,8 @@ void initialize_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, flo
     else
     {
       grid[i].type = 1;
-      grid[i].velocity->x = rand() % 10 - 5;
-      grid[i].velocity->y = rand() % 10 - 5;
+      grid[i].velocity->x = rand() % 11 - 5;
+      grid[i].velocity->y = rand() % 11 - 5;
     }
   }
 }
