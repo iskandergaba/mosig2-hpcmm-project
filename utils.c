@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
 
 #include "utils.h"
 
@@ -14,9 +15,27 @@ int cmpfunc_pos_y(const boid_t *a, const boid_t *b)
   return (int)(a->position->y - b->position->y);
 }
 
-float distance(const boid_t *a, const boid_t *b)
+float _inner_prod(vector_t *a, vector_t *b)
 {
-  return sqrt(pow(a->position->x - b->position->x, 2) + pow(a->position->y - b->position->y, 2));
+  return a->x * b->x + a->y + b->y;
+}
+
+float _norm(vector_t *a)
+{
+  return sqrt(_inner_prod(a, a));
+}
+
+float _angle(vector_t *a, vector_t *b)
+{
+  return acos(_inner_prod(a, b) / (_norm(a) * _norm(b)));
+}
+
+bool is_visible(const boid_t *a, const boid_t *b, float r, float theta)
+{
+  vector_t vec = {b->position->x - a->position->x, a->position->y - b->position->y};
+  float distance = _norm(&vec);
+  float beta = _angle(a->velocity, &vec);
+  return distance <= r && beta <= theta / 2;
 }
 
 void print_boid_pos(boid_t *b)

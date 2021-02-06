@@ -9,8 +9,11 @@
 
 #include "sorting.h"
 
+const double PI = 3.1415926;
+
 void init_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, float obs_fraction)
 {
+  srand((unsigned) time(NULL));
   for (size_t i = 0; i < n; i++)
   {
     grid[i].position = malloc(sizeof(vector_t));
@@ -29,13 +32,9 @@ void init_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, float obs
     else
     {
       grid[i].type = 1;
-      grid[i].velocity->x = 5;
-      grid[i].velocity->y = 5;
+      grid[i].velocity->x = rand() % 10 - 5;
+      grid[i].velocity->y = rand() % 10 - 5;
     }
-
-    vector_t *velocity = malloc(sizeof(vector_t));
-    velocity->x, velocity->y = is_obstacle < obs_fraction ? 0, 0 : 5, 5;
-    grid[i].velocity = velocity;
   }
 }
 
@@ -110,18 +109,20 @@ int main(int argc, char *argv[])
   // Weights are index by species type - 1, since we do not need a field for
   // type 0 (obstacles)
   // TODO: currently we only have obstacle or boid - may or may not add enemies
-  float cohesion_weights[1] = {0.5};
+  float cohesion_weights[1] = {1};
   float separation_weights[1] = {1};
   float alignment_weights[1] = {1};
   // repulsion factor increases seaparation of species from enemies/obstacles
   // than their own type
-  float repulsion_factor[2] = {2, 1};
+  float repulsion_factor[2] = {3, 1};
 
   size_t n_iterations = 100;
   // Radius in Neighborhood cells
   int neighborhood = 2;
   // Visibility radius
   float r = 10;
+  // Visibility angle in radians
+  float theta = PI / 3;
 
   // Execution time tracking variables
   struct timeval start, end;
@@ -201,7 +202,7 @@ int main(int argc, char *argv[])
 
             neighbor = grid + indXNeigh * d + indYNeigh;
             // Check if the neighbor is visible to the current boid
-            if (distance(curr_boid, neighbor) <= r)
+            if (is_visible(curr_boid, neighbor, r, theta))
             {
               n_neighbors++;
             }
