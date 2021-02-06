@@ -4,4 +4,3 @@ TODO: work with integers only instead of float??
 TODO: maybe normalize velocity with constant speed per type of species
 TODO: Add vision angle
 TODO: Clean the code a bit and remove redundancy
-TODO: Ensure there no boid position is being updated while it is being read by another thread in the parallel implementation.

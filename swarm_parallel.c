@@ -9,7 +9,7 @@
 
 #include "sorting.h"
 
-void initialize_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, float obs_fraction)
+void init_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, float obs_fraction)
 {
   for (size_t i = 0; i < n; i++)
   {
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  int n = pow(d, 2); // number of boids
+  int n = pow(d, 2);                  // number of boids
   float obs_fraction = atof(argv[3]); // fraction of obstacles
 
   if (obs_fraction < 0 || obs_fraction >= 1)
@@ -75,15 +75,20 @@ int main(int argc, char *argv[])
   // our boids will be positioned in:
   // x \in [0, range_x)
   // y \in [0, range_y)
-  size_t range_x = 250;
-  size_t range_y = 200;
+  size_t range_x = 200;
+  size_t range_y = 250;
 
   // Allocate grid as 1D array (easier for the sake of sorting)
+  // Read-only during the updating phase
   boid_t *grid = (boid_t *)malloc(n * sizeof(boid_t));
+  // Write-only during the updating phase
+  boid_t *work_grid = (boid_t *)malloc(n * sizeof(boid_t));
 
   // Initializing grid
   srand(time(NULL));
-  initialize_grid(grid, n, range_x, range_y, obs_fraction);
+  init_grid(grid, n, range_x, range_y, obs_fraction);
+  // Clone the grid
+  memcpy(work_grid, grid, n * sizeof(boid_t));
 
   // Printing after sorting
   if (verbose)
@@ -105,18 +110,18 @@ int main(int argc, char *argv[])
   // Weights are index by species type - 1, since we do not need a field for
   // type 0 (obstacles)
   // TODO: currently we only have obstacle or boid - may or may not add enemies
-  float cohesion_weights[1] = {1};
+  float cohesion_weights[1] = {0.5};
   float separation_weights[1] = {1};
   float alignment_weights[1] = {1};
   // repulsion factor increases seaparation of species from enemies/obstacles
   // than their own type
-  float repulsion_factor[2] = {3, 1};
+  float repulsion_factor[2] = {2, 1};
 
   size_t n_iterations = 100;
   // Radius in Neighborhood cells
   int neighborhood = 2;
   // Visibility radius
-  float r = 25;
+  float r = 10;
 
   // Execution time tracking variables
   struct timeval start, end;
@@ -130,12 +135,14 @@ int main(int argc, char *argv[])
      * PARALLEL SORTING PASS *
      *************************/
     // Sort by position x
-    parallel_merge_sort(grid, n, cmpfunc_pos_x);
+    parallel_merge_sort(work_grid, n, cmpfunc_pos_x);
     // Now sort each column of the equivalent 2D array by pos_y
     for (size_t i = 0; i < d; i++)
     {
-      parallel_merge_sort(grid + i * d, d, cmpfunc_pos_y);
+      parallel_merge_sort(work_grid + i * d, d, cmpfunc_pos_y);
     }
+    memcpy(grid, work_grid, n * sizeof(boid_t));
+
     // Printing after sorting
     if (verbose && k == 0)
     {
@@ -156,6 +163,7 @@ int main(int argc, char *argv[])
     {
       // get current boid
       boid_t *curr_boid = grid + i;
+      boid_t *work_boid = work_grid + i;
 
       // if current element is an obstacle, do nothing
       if (curr_boid->type == 0)
@@ -246,17 +254,17 @@ int main(int argc, char *argv[])
       }
 
       // update velocity of boid
-      curr_boid->velocity->x += alignment_weights[curr_boid->type - 1] * alignment.x +
+      work_boid->velocity->x += alignment_weights[curr_boid->type - 1] * alignment.x +
                                 cohesion_weights[curr_boid->type - 1] * cohesion.x +
                                 separation_weights[curr_boid->type - 1] * separation.x;
 
-      curr_boid->velocity->y += alignment_weights[curr_boid->type - 1] * alignment.y +
+      work_boid->velocity->y += alignment_weights[curr_boid->type - 1] * alignment.y +
                                 cohesion_weights[curr_boid->type - 1] * cohesion.y +
                                 separation_weights[curr_boid->type - 1] * separation.y;
       // update position of boid
       // TODO: this modulo thing is horrible, fix it
-      curr_boid->position->x = (int)(curr_boid->position->x + curr_boid->velocity->x) % range_x;
-      curr_boid->position->y = (int)(curr_boid->position->y + curr_boid->velocity->y) % range_y;
+      work_boid->position->x = (int)(curr_boid->position->x + curr_boid->velocity->x) % range_x;
+      work_boid->position->y = (int)(curr_boid->position->y + curr_boid->velocity->y) % range_y;
     }
   }
 
@@ -265,12 +273,14 @@ int main(int argc, char *argv[])
   *       FOR AESTHETICS        *
   *******************************/
   // Sort by position x
-  parallel_merge_sort(grid, n, cmpfunc_pos_x);
+  parallel_merge_sort(work_grid, n, cmpfunc_pos_x);
   // Now sort each column of the equivalent 2D array by pos_y
   for (size_t i = 0; i < d; i++)
   {
-    parallel_merge_sort(grid + i * d, d, cmpfunc_pos_y);
+    parallel_merge_sort(work_grid + i * d, d, cmpfunc_pos_y);
   }
+  memcpy(grid, work_grid, n * sizeof(boid_t));
+
   // Printing after the iterations
   if (verbose)
   {
