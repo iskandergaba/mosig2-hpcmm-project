@@ -4,5 +4,8 @@
 # Executables
 *.run
 
+# Log files
+*.log
+
 # Dummy test file for Hady
 test.c

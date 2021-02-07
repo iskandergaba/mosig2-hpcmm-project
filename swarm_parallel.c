@@ -9,6 +9,7 @@
 
 #include "sorting.h"
 
+const int N_TRIALS = 20;
 const double PI = 3.1415926;
 
 void init_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, float obs_fraction)
@@ -38,38 +39,10 @@ void init_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, float obs
   }
 }
 
-int main(int argc, char *argv[])
+int swarm(int nthreads, int d, float obs_fraction, bool verbose)
 {
-  if (argc < 4)
-  {
-    fprintf(stderr, "Usage:  ./swarm_parallel.run <num_trheads> <sqrt(number_of_boids)> <fraction of obstacles>\n");
-    return -1;
-  }
-
-  int nthreads = atoi(argv[1]);
-  if (nthreads < 1)
-  {
-    fprintf(stderr, "Please provide a positive number of threads.\n");
-    return -1;
-  }
-
-  int d = atoi(argv[2]); // Grid dimension (i.e. sqrt(number of boids))
-  if (d < 1)
-  {
-    fprintf(stderr, "Please provide a positive number for the size of grid.\n");
-    return -1;
-  }
-
-  int n = pow(d, 2);                  // number of boids
-  float obs_fraction = atof(argv[3]); // fraction of obstacles
-
-  if (obs_fraction < 0 || obs_fraction >= 1)
-  {
-    fprintf(stderr, "The fraction of obstacles should lie in [0, 1).\n");
-    return -1;
-  }
-
-  bool verbose = argc >= 5 ? atoi(argv[4]) : false;
+  // number of boids
+  int n = pow(d, 2);
 
   // our boids will be positioned in:
   // x \in [0, range_x)
@@ -123,11 +96,6 @@ int main(int argc, char *argv[])
   float r = 10;
   // Visibility angle in radians
   float theta = PI / 3;
-
-  // Execution time tracking variables
-  struct timeval start, end;
-  // Start timer
-  gettimeofday(&start, NULL);
 
   for (size_t k = 0; k < n_iterations; k++)
   {
@@ -288,13 +256,59 @@ int main(int argc, char *argv[])
     printf("\n\nAfter %zu iterations:\n", n_iterations);
     print_boid_grid(grid, d);
   }
+  return 0;
+}
 
+int main(int argc, char *argv[])
+{
+  if (argc < 4)
+  {
+    fprintf(stderr, "Usage:  ./swarm_parallel.run <num_trheads> <sqrt(number_of_boids)> <fraction of obstacles>\n");
+    return -1;
+  }
+
+  int nthreads = atoi(argv[1]);
+  if (nthreads < 1)
+  {
+    fprintf(stderr, "Please provide a positive number of threads.\n");
+    return -1;
+  }
+
+  int d = atoi(argv[2]); // Grid dimension (i.e. sqrt(number of boids))
+  if (d < 1)
+  {
+    fprintf(stderr, "Please provide a positive number for the size of grid.\n");
+    return -1;
+  }
+
+  float obs_fraction = atof(argv[3]); // fraction of obstacles
+
+  if (obs_fraction < 0 || obs_fraction >= 1)
+  {
+    fprintf(stderr, "The fraction of obstacles should lie in [0, 1).\n");
+    return -1;
+  }
+
+  bool verbose = argc >= 5 ? atoi(argv[4]) : false;
+
+  // Execution time tracking variables
+  struct timeval start, end;
+  // Start timer
+  gettimeofday(&start, NULL);
+  for (int i = 0; i < N_TRIALS; i++)
+  {
+    if (verbose) {
+      printf("Trial %d\n", i + 1);
+    }
+    swarm(nthreads, d, obs_fraction, verbose);
+    if (verbose) {
+      printf("\n");
+    }
+  }
   // Stop timer
   gettimeofday(&end, NULL);
-
   double time_taken = end.tv_sec + end.tv_usec / 1e6 -
                       start.tv_sec - start.tv_usec / 1e6; // in seconds
 
-  printf("Execution time: %f seconds\n", time_taken);
-  return 0;
+  printf("Average execution time: %f seconds\n", time_taken / N_TRIALS);
 }
