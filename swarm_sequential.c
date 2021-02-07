@@ -12,7 +12,7 @@
 const int N_TRIALS = 20;
 const double PI = 3.1415926;
 
-void initialize_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, float obs_fraction)
+void init_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, float obs_fraction)
 {
   for (size_t i = 0; i < n; i++)
   {
@@ -53,7 +53,7 @@ int swarm(int d, float obs_fraction, bool verbose)
   boid_t *grid = (boid_t *)malloc(n * sizeof(boid_t));
 
   // Initializing grid
-  initialize_grid(grid, n, range_x, range_y, obs_fraction);
+  init_grid(grid, n, range_x, range_y, obs_fraction);
 
   // Printing after sorting
   if (verbose)
