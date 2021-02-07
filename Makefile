@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -O2 -fopenmp
 LDFLAGS = -fopenmp
 
-EXEC = 	main.run
+EXEC = 	swarm_sequential.run swarm_parallel.run
 
 HEADER_FILES = $(wildcard *.h)
 

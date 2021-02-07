@@ -1,12 +1,15 @@
 #include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <time.h>
 #include <math.h>
 #include <sys/time.h>
 
 #include "sorting.h"
+
+const double PI = 3.1415926;
 
 void initialize_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, float obs_fraction)
 {
@@ -28,13 +31,9 @@ void initialize_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, flo
     else
     {
       grid[i].type = 1;
-      grid[i].velocity->x = 5;
-      grid[i].velocity->y = 5;
+      grid[i].velocity->x = rand() % 11 - 5;
+      grid[i].velocity->y = rand() % 11 - 5;
     }
-
-    vector_t *velocity = malloc(sizeof(vector_t));
-    velocity->x, velocity->y = is_obstacle < obs_fraction ? 0, 0 : 5, 5;
-    grid[i].velocity = velocity;
   }
 }
 
@@ -42,18 +41,18 @@ int main(int argc, char *argv[])
 {
   if (argc < 3)
   {
-    fprintf(stderr, "Usage:  ./main.run <sqrt(number_of_boids)>  <fraction of obstacles>\n");
+    fprintf(stderr, "Usage:  ./main.run <sqrt(number_of_boids)> <fraction of obstacles> <verbose>\n");
     return -1;
   }
 
-  int p = atoi(argv[1]); // log_2(number of boids)
-  if (p % 2 == 1)
+  int d = atoi(argv[1]); // Grid dimension (i.e. sqrt(number of boids))
+  if (d < 1)
   {
-    fprintf(stderr, "Please provide an even number.\n");
+    fprintf(stderr, "Please provide a positive number for the size of grid.\n");
     return -1;
   }
-  int n = pow(2, p);                  // number of boids
-  int d = pow(2, p / 2);              // size of grid across one dimension
+
+  int n = pow(d, 2);                  // number of boids
   float obs_fraction = atof(argv[2]); // fraction of obstacles
 
   if (obs_fraction < 0 || obs_fraction >= 1)
@@ -61,6 +60,8 @@ int main(int argc, char *argv[])
     fprintf(stderr, "The fraction of obstacles should lie in [0, 1).\n");
     return -1;
   }
+
+  bool verbose = argc >= 4 ? atoi(argv[3]) : false;
 
   // our boids will be positioned in:
   // x \in [0, range_x)
@@ -76,8 +77,12 @@ int main(int argc, char *argv[])
   initialize_grid(grid, n, range_x, range_y, obs_fraction);
 
   // Printing after sorting
-  printf("Before sorting:\n");
-  print_boid_grid(grid, d);
+  if (verbose)
+  {
+    printf("Before sorting:\n");
+    print_boid_grid(grid, d);
+    printf("\n");
+  }
 
   /*  for(size_t i = 0; i < n; i++) {
     if (i % d == 0) {
@@ -96,8 +101,6 @@ int main(int argc, char *argv[])
   // https://gamedevelopment.tutsplus.com/tutorials/3-simple-rules-of-flocking-behaviors-alignment-cohesion-and-separation--gamedev-3444
   // They match with the paper
 
-  printf("\n");
-
   // Weights are index by species type - 1, since we do not need a field for
   // type 0 (obstacles
   // TODO: currently we only have obstacle or boid - may or may not add enemies
@@ -112,7 +115,9 @@ int main(int argc, char *argv[])
   // Radius in Neighborhood cells
   int neighborhood = 2;
   // Visibility radius
-  float r = 25;
+  float r = 10;
+  // Visibility angle in radians
+  float theta = PI / 3;
 
   // Execution time tracking variables
   struct timeval start, end;
@@ -132,7 +137,7 @@ int main(int argc, char *argv[])
       sequential_merge_sort(grid + i * d, d, cmpfunc_pos_y);
     }
     // Printing after sorting
-    if (k == 0)
+    if (verbose && k == 0)
     {
       printf("\n\nAfter sorting:\n");
       print_boid_grid(grid, d);
@@ -183,7 +188,7 @@ int main(int argc, char *argv[])
 
             neighbor = grid + indXNeigh * d + indYNeigh;
             // Check if the neighbor is visible to the current boid
-            if (distance(curr_boid, neighbor) <= r)
+            if (is_visible(curr_boid, neighbor, r, theta))
             {
               n_neighbors++;
             }
@@ -262,8 +267,11 @@ int main(int argc, char *argv[])
     sequential_merge_sort(grid + i * d, d, cmpfunc_pos_y);
   }
   // Printing after the iterations
-  printf("\n\nAfter %zu iterations:\n", n_iterations);
-  print_boid_grid(grid, d);
+  if (verbose)
+  {
+    printf("\n\nAfter %zu iterations:\n", n_iterations);
+    print_boid_grid(grid, d);
+  }
 
   // Stop timer
   gettimeofday(&end, NULL);
@@ -271,6 +279,6 @@ int main(int argc, char *argv[])
   double time_taken = end.tv_sec + end.tv_usec / 1e6 -
                       start.tv_sec - start.tv_usec / 1e6; // in seconds
 
-  printf("\nExecution time: %f seconds\n", time_taken);
+  printf("Execution time: %f seconds\n", time_taken);
   return 0;
 }
