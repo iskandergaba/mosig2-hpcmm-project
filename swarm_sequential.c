@@ -53,7 +53,6 @@ int swarm(int d, float obs_fraction, bool verbose)
   boid_t *grid = (boid_t *)malloc(n * sizeof(boid_t));
 
   // Initializing grid
-  srand(time(NULL));
   initialize_grid(grid, n, range_x, range_y, obs_fraction);
 
   // Printing after sorting
@@ -274,17 +273,22 @@ int main(int argc, char *argv[])
 
   bool verbose = argc >= 4 ? atoi(argv[3]) : false;
 
+  // Randomize the seed
+  srand(time(NULL));
+
   // Execution time tracking variables
   struct timeval start, end;
   // Start timer
   gettimeofday(&start, NULL);
   for (int i = 0; i < N_TRIALS; i++)
   {
-    if (verbose) {
+    if (verbose)
+    {
       printf("Trial %d\n", i + 1);
     }
     swarm(d, obs_fraction, verbose);
-    if (verbose) {
+    if (verbose)
+    {
       printf("\n");
     }
   }

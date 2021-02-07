@@ -14,7 +14,6 @@ const double PI = 3.1415926;
 
 void init_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, float obs_fraction)
 {
-  srand((unsigned) time(NULL));
   for (size_t i = 0; i < n; i++)
   {
     grid[i].position = malloc(sizeof(vector_t));
@@ -57,7 +56,6 @@ int swarm(int nthreads, int d, float obs_fraction, bool verbose)
   boid_t *work_grid = (boid_t *)malloc(n * sizeof(boid_t));
 
   // Initializing grid
-  srand(time(NULL));
   init_grid(grid, n, range_x, range_y, obs_fraction);
   // Clone the grid
   memcpy(work_grid, grid, n * sizeof(boid_t));
@@ -291,17 +289,22 @@ int main(int argc, char *argv[])
 
   bool verbose = argc >= 5 ? atoi(argv[4]) : false;
 
+  // Randomize the seed
+  srand(time(NULL));
+
   // Execution time tracking variables
   struct timeval start, end;
   // Start timer
   gettimeofday(&start, NULL);
   for (int i = 0; i < N_TRIALS; i++)
   {
-    if (verbose) {
+    if (verbose)
+    {
       printf("Trial %d\n", i + 1);
     }
     swarm(nthreads, d, obs_fraction, verbose);
-    if (verbose) {
+    if (verbose)
+    {
       printf("\n");
     }
   }
