@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
 {
   if (argc < 4)
   {
-    fprintf(stderr, "Usage:  ./swarm_parallel.run <num_trheads> <sqrt(number_of_boids)> <fraction of obstacles> <verbose>\n");
+    fprintf(stderr, "Usage:  ./swarm_parallel.run <num_trheads> <sqrt(number_of_boids)> <fraction_of_obstacles> <verbose>\n");
     return -1;
   }
 

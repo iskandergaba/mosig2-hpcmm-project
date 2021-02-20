@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
 {
   if (argc < 3)
   {
-    fprintf(stderr, "Usage:  ./swarm_sequential.run <sqrt(number_of_boids)> <fraction of obstacles> <verbose>\n");
+    fprintf(stderr, "Usage:  ./swarm_sequential.run <sqrt(number_of_boids)> <fraction_of_obstacles> <verbose>\n");
     return -1;
   }
 
