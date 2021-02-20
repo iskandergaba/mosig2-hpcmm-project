@@ -40,27 +40,27 @@ void init_grid(boid_t *grid, size_t n, size_t range_x, size_t range_y, float obs
 
 int swarm(int nthreads, int d, float obs_fraction, bool verbose)
 {
-  // number of boids
+  // Number of boids
   int n = pow(d, 2);
 
-  // our boids will be positioned in:
+  // Boids will be positioned in:
   // x \in [0, range_x)
   // y \in [0, range_y)
   size_t range_x = 200;
   size_t range_y = 250;
 
-  // Allocate grid as 1D array (easier for the sake of sorting)
+  // Allocate grid as 1D array
   // Read-only during the updating phase
   boid_t *grid = (boid_t *)malloc(n * sizeof(boid_t));
   // Write-only during the updating phase
   boid_t *work_grid = (boid_t *)malloc(n * sizeof(boid_t));
 
-  // Initializing grid
+  // Initialize grid
   init_grid(grid, n, range_x, range_y, obs_fraction);
   // Clone the grid
   memcpy(work_grid, grid, n * sizeof(boid_t));
 
-  // Printing after sorting
+  // Print after sorting
   if (verbose)
   {
     printf("Before sorting:\n");
@@ -73,17 +73,12 @@ int swarm(int nthreads, int d, float obs_fraction, bool verbose)
   // Direction Following    Influence   aka   ALIGNMENT
   // Obstacles and Enemies  Influence
 
-  // influence implementations were inspired by:
-  // https://gamedevelopment.tutsplus.com/tutorials/3-simple-rules-of-flocking-behaviors-alignment-cohesion-and-separation--gamedev-3444
-  // They match with the paper
-
   // Weights are index by species type - 1, since we do not need a field for
   // type 0 (obstacles)
-  // TODO: currently we only have obstacle or boid - may or may not add enemies
   float cohesion_weights[1] = {1};
   float separation_weights[1] = {1};
   float alignment_weights[1] = {1};
-  // repulsion factor increases seaparation of species from enemies/obstacles
+  // Repulsion factor increases seaparation of species from enemies/obstacles
   // than their own type
   float repulsion_factor[2] = {3, 1};
 
@@ -110,7 +105,7 @@ int swarm(int nthreads, int d, float obs_fraction, bool verbose)
     }
     memcpy(grid, work_grid, n * sizeof(boid_t));
 
-    // Printing after sorting
+    // Print after sorting
     if (verbose && k == 0)
     {
       printf("\n\nAfter sorting:\n");
@@ -122,13 +117,12 @@ int swarm(int nthreads, int d, float obs_fraction, bool verbose)
      ***********************/
     // loop over the boids.
     // Many schedulig possibilities here (static, dynamic, guided, etc.)
-    // Strategies explained here: http://jakascorner.com/blog/2016/06/omp-for-scheduling.html
 //#pragma omp parallel for schedule(static) num_threads(nthreads)
 //#pragma omp parallel for schedule(dynamic, 8) num_threads(nthreads)
 #pragma omp parallel for schedule(guided) num_threads(nthreads)
     for (size_t i = 0; i < n; i++)
     {
-      // get current boid
+      // Get current boid
       boid_t *curr_boid = grid + i;
       boid_t *work_boid = work_grid + i;
 
@@ -136,13 +130,9 @@ int swarm(int nthreads, int d, float obs_fraction, bool verbose)
       if (curr_boid->type == 0)
         continue;
 
-      // get indexX and indexY
+      // Get indexX and indexY
       size_t indexX = i / d;
       size_t indexY = i % d;
-
-      //    printf("\nNeighbors of: ");
-      //    print_boid_pos(&grid[i]);
-      //    printf(" at indX=%zu and indY=%zu\n", indexX, indexY);
 
       // Initialize vectors for each influence
       vector_t cohesion = {0, 0};
@@ -152,19 +142,16 @@ int swarm(int nthreads, int d, float obs_fraction, bool verbose)
       size_t n_neighbors_type = 0;
       boid_t *neighbor;
 
-      // loop over the neighbors of the boid
+      // Loop over the neighbors of the boid
       for (int x = -neighborhood; x <= neighborhood; x++)
       {
         for (int y = -neighborhood; y <= neighborhood; y++)
         {
-          // access grid[indexX+x][indexY+y]
+          // Access grid[indexX+x][indexY+y]
           if (x != 0 || y != 0)
           {
             int indXNeigh = (indexX + x) % d;
             int indYNeigh = (indexY + y) % d;
-            //          print_boid_pos(&grid[indXNeigh * d + indYNeigh]);
-            //          printf(" at x=%d and y=%d",x,y);
-            //          printf("\n");
 
             neighbor = grid + indXNeigh * d + indYNeigh;
             // Check if the neighbor is visible to the current boid
@@ -191,6 +178,7 @@ int swarm(int nthreads, int d, float obs_fraction, bool verbose)
             // Separation with all neighbors
             separation.x += neighbor->position->x - (grid + i)->position->x;
             separation.y += neighbor->position->y - (grid + i)->position->y;
+
             // if neighbor is an obstacle OR enemy separate more
             if (neighbor->type != curr_boid->type)
             {
@@ -201,7 +189,7 @@ int swarm(int nthreads, int d, float obs_fraction, bool verbose)
         }
       }
 
-      // Finalizing vectors
+      // Finalize vectors
       if (n_neighbors_type > 0)
       {
         cohesion.x = cohesion.x / n_neighbors_type;
@@ -212,7 +200,6 @@ int swarm(int nthreads, int d, float obs_fraction, bool verbose)
         alignment.y = alignment.y / n_neighbors_type;
         normalize_vector(&alignment);
       }
-      // keep this if statement because later we will compute visual field
       if (n_neighbors > 0)
       {
         separation.x *= -1 / n_neighbors;
@@ -220,7 +207,7 @@ int swarm(int nthreads, int d, float obs_fraction, bool verbose)
         normalize_vector(&separation);
       }
 
-      // update velocity of boid
+      // Update velocity of boid
       work_boid->velocity->x += alignment_weights[curr_boid->type - 1] * alignment.x +
                                 cohesion_weights[curr_boid->type - 1] * cohesion.x +
                                 separation_weights[curr_boid->type - 1] * separation.x;
@@ -228,8 +215,7 @@ int swarm(int nthreads, int d, float obs_fraction, bool verbose)
       work_boid->velocity->y += alignment_weights[curr_boid->type - 1] * alignment.y +
                                 cohesion_weights[curr_boid->type - 1] * cohesion.y +
                                 separation_weights[curr_boid->type - 1] * separation.y;
-      // update position of boid
-      // TODO: this modulo thing is horrible, fix it
+      // Update position of boid
       work_boid->position->x = (int)(curr_boid->position->x + curr_boid->velocity->x) % range_x;
       work_boid->position->y = (int)(curr_boid->position->y + curr_boid->velocity->y) % range_y;
     }
@@ -248,7 +234,7 @@ int swarm(int nthreads, int d, float obs_fraction, bool verbose)
   }
   memcpy(grid, work_grid, n * sizeof(boid_t));
 
-  // Printing after the iterations
+  // Print after the iterations
   if (verbose)
   {
     printf("\n\nAfter %zu iterations:\n", n_iterations);
@@ -272,14 +258,16 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  int d = atoi(argv[2]); // Grid dimension (i.e. sqrt(number of boids))
+  // Grid dimension (i.e. sqrt(number of boids))
+  int d = atoi(argv[2]);
   if (d < 1)
   {
     fprintf(stderr, "Please provide a positive number for the size of grid.\n");
     return -1;
   }
 
-  float obs_fraction = atof(argv[3]); // fraction of obstacles
+  // Fraction of obstacles
+  float obs_fraction = atof(argv[3]);
 
   if (obs_fraction < 0 || obs_fraction >= 1)
   {

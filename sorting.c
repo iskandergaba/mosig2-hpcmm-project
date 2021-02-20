@@ -6,7 +6,7 @@
 #include "sorting.h"
 
 /*
-   merge sort -- sequential, parallel --
+   Merge sort -- sequential, parallel --
 */
 
 void merge(boid_t *T, const size_t size, int (*cmp)(const boid_t *e1, const boid_t *e2))
